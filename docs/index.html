@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nagdar — piece-rate wage slip</title>
+<meta name="description" content="Nagdar totals a piece-rate worker's wage across rate categories, net of rejects, and prints a wage slip — a dispute-avoidance artifact for semi-literate workers.">
+<style>
+  :root{--bg:#eef4f8;--card:#fff;--ink:#122029;--muted:#516472;--brand:#3e6e8e;--brand-ink:#254559;--line:#d8e4ec;--accent:#e5eef4}
+  @media (prefers-color-scheme:dark){:root{--bg:#0d1319;--card:#151d24;--ink:#e4edf4;--muted:#93a6b6;--brand:#5f97ba;--brand-ink:#bcd8ea;--line:#233039;--accent:#141f27}}
+  *{box-sizing:border-box}html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+  header{padding:64px 0 24px;text-align:center}
+  .eyebrow{color:var(--brand);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:13px}
+  h1{font-size:44px;margin:.2em 0 .1em;letter-spacing:-.02em}
+  .tag{color:var(--muted);font-size:19px;max-width:640px;margin:8px auto 0}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:28px 0}
+  @media (max-width:760px){.grid{grid-template-columns:1fr}h1{font-size:34px}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+  .card h2{margin:0 0 8px;font-size:20px}
+  input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px;width:100%}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:6px 4px;font-size:14px;border-bottom:1px dashed var(--line)}
+  td.r,th.r{text-align:right}
+  .slip{background:var(--accent);border-radius:12px;padding:16px;margin-top:14px}
+  .tot{display:flex;justify-content:space-between;font-size:20px;font-weight:800;color:var(--brand-ink);margin-top:8px}
+  button{background:var(--brand);color:#fff;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;margin-top:8px}
+  footer{color:var(--muted);font-size:13px;text-align:center;padding:40px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Nagdar · नग दर</div>
+    <h1>Piece-rate wages, no disputes</h1>
+    <p class="tag">Mixed rates, partial quantities and rejects summed across dozens of chits is
+      error-prone. Nagdar totals the week and prints a wage slip both sides can trust.</p>
+  </header>
+  <div class="grid">
+    <div class="card">
+      <h2>Try it</h2>
+      <table>
+        <thead><tr><th>Category</th><th>Qty</th><th>Rej</th><th>₹/pc</th><th class="r">Amount</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <button onclick="addRow()">+ rate line</button>
+      <div class="slip">
+        <div style="font-weight:700">Wage slip</div>
+        <div class="tot"><span>Net wage</span><span id="net">₹0.00</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>The slip is the point</h2>
+      <p style="color:var(--muted)">Job-work ERP targets large manufacturers; the small unit has a pile
+        of chits. Nagdar accumulates the period across workers and rate-categories and produces a
+        printable slip — a dispute-avoidance artifact for semi-literate piece workers.</p>
+      <p style="color:var(--muted)">Each line pays <b>(qty − rejects) × rate</b>.</p>
+      <p style="color:var(--muted);font-size:14px">Flutter → Go → PostgreSQL.</p>
+    </div>
+  </div>
+  <footer>Nagdar · a local-first shopkeeper tool · offline, no account.</footer>
+</div>
+<script>
+  const rows=[{c:'stitch',q:120,r:5,rate:3},{c:'button',q:200,r:0,rate:0.5}];
+  function render(){
+    document.getElementById('rows').innerHTML=rows.map((x,i)=>`
+      <tr>
+        <td><input value="${x.c}" oninput="upd(${i},'c',this.value)"></td>
+        <td><input type="number" value="${x.q}" oninput="upd(${i},'q',this.value)"></td>
+        <td><input type="number" value="${x.r}" oninput="upd(${i},'r',this.value)"></td>
+        <td><input type="number" value="${x.rate}" oninput="upd(${i},'rate',this.value)"></td>
+        <td class="r">₹${((x.q-x.r)*x.rate).toFixed(2)}</td>
+      </tr>`).join('');
+    const net=rows.reduce((s,x)=>s+(x.q-x.r)*x.rate,0);
+    document.getElementById('net').textContent='₹'+net.toFixed(2);
+  }
+  function upd(i,k,v){ rows[i][k]= k==='c'? v : (+v||0); render(); }
+  function addRow(){ rows.push({c:'',q:0,r:0,rate:0}); render(); }
+  render();
+</script>
+</body>
+</html>
